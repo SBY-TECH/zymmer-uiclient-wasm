@@ -273,7 +273,7 @@ function _QtLoader(config)
     function fetchCompileWasm(filePath) {
         return fetchResource(filePath).then(function(response) {
             if (typeof WebAssembly.compileStreaming !== "undefined") {
-                self.loaderSubState = "Downloading/Compiling";
+                self.loaderSubState = "Cargando";
                 setStatus("Loading");
                 return WebAssembly.compileStreaming(response).catch(function(error) {
                     // compileStreaming may/will fail if the server does not set the correct
@@ -309,7 +309,7 @@ function _QtLoader(config)
         // Continue waiting if loadEmscriptenModule() is called again
         if (publicAPI.status == "Loading")
             return;
-        self.loaderSubState = "Downloading";
+        self.loaderSubState = "Cargando";
         setStatus("Loading");
 
         // Fetch emscripten generated javascript runtime
