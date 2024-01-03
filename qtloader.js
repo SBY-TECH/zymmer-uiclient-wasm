@@ -121,6 +121,8 @@
 //   const loader = new QtLoader(config);
 //
 // instantiation types work.
+
+var loadingPercent=0
 function QtLoader(config)
 {
     return new _QtLoader(config);
@@ -180,6 +182,7 @@ function _QtLoader(config)
             var loadingText = document.createElement("text");
             loadingText.className = "QtLoading"
             loadingText.innerHTML = "<p><center>" + loadingState + "</center><p>";
+
             return loadingText;
         };
 
@@ -273,7 +276,7 @@ function _QtLoader(config)
     function fetchCompileWasm(filePath) {
         return fetchResource(filePath).then(function(response) {
             if (typeof WebAssembly.compileStreaming !== "undefined") {
-                self.loaderSubState = "Downloading/Compiling";
+                self.loaderSubState = "Cargando";
                 setStatus("Loading");
                 return WebAssembly.compileStreaming(response).catch(function(error) {
                     // compileStreaming may/will fail if the server does not set the correct
@@ -288,6 +291,12 @@ function _QtLoader(config)
         });
     }
 
+    function update() {
+      var element = document.getElementById("progressBar");
+
+        element.style.width=loadingPercent+'%'
+
+    }
     function loadEmscriptenModule(applicationName) {
 
         // Loading in qtloader.js goes through four steps:
@@ -296,42 +305,58 @@ function _QtLoader(config)
         // 3) Configure the emscripten Module object
         // 4) Start the emcripten runtime, after which emscripten takes over
 
+
+
+        update()
         // Check for Wasm & WebGL support; set error and return before downloading resources if missing
         if (!webAssemblySupported()) {
             handleError("Error: WebAssembly is not supported");
             return;
         }
+
         if (!webGLSupported()) {
             handleError("Error: WebGL is not supported");
             return;
         }
-
+        loadingPercent+=25
+        update()
         // Continue waiting if loadEmscriptenModule() is called again
         if (publicAPI.status == "Loading")
             return;
-        self.loaderSubState = "Downloading";
+        self.loaderSubState = "Cargando";
         setStatus("Loading");
 
         // Fetch emscripten generated javascript runtime
         var emscriptenModuleSource = undefined
         var emscriptenModuleSourcePromise = fetchText(applicationName + ".js").then(function(source) {
             emscriptenModuleSource = source
+            loadingPercent+=25
+            update()
         });
 
         // Fetch and compile wasm module
         var wasmModule = undefined;
         var wasmModulePromise = fetchCompileWasm(applicationName + ".wasm").then(function (module) {
             wasmModule = module;
+            loadingPercent+=25
+            update()
         });
+
+        //console.log(loadingPercent)
 
         // Wait for all resources ready
         Promise.all([emscriptenModuleSourcePromise, wasmModulePromise]).then(function(){
+            loadingPercent+=25
+
+            update()
             completeLoadEmscriptenModule(applicationName, emscriptenModuleSource, wasmModule);
+
         }).catch(function(error) {
             handleError(error);
             // An error here is fatal, abort
             self.moduleConfig.onAbort(error)
         });
+
     }
 
     function completeLoadEmscriptenModule(applicationName, emscriptenModuleSource, wasmModule) {
