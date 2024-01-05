@@ -293,8 +293,9 @@ function _QtLoader(config)
 
     function update() {
       var element = document.getElementById("progressBar");
-
+      var label=document.getElementById("percent");
         element.style.width=loadingPercent+'%'
+        label.innerHTML = loadingPercent+'%';
 
     }
     function loadEmscriptenModule(applicationName) {
